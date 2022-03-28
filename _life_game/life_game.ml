@@ -1,7 +1,27 @@
+(*rules :
+    dead cell with 3 neighbours => born
+    alive cell with 2/3 neighbours => survive*)
+
 type cell = {
   mutable state : bool;
   mutable nb_neighbour : int
   }
+
+let a0 = {state = false ; nb_neighbour = 0}
+let a1 = {state = false ; nb_neighbour = 0}
+let a2 = {state = false ; nb_neighbour = 0}
+let b0 = {state = false ; nb_neighbour = 0}
+let b1 = {state = false ; nb_neighbour = 0}
+let b2 = {state = false ; nb_neighbour = 0}
+let c0 = {state = false ; nb_neighbour = 0}
+let c1 = {state = false ; nb_neighbour = 0}
+let c2 = {state = false ; nb_neighbour = 0}
+
+let arr = [| [|a0 ; a1 ; a2|] ; [|b0 ; b1 ; b2|] ; [|c0 ; c1 ; c2|] |]
+
+
+
+
 
 let size = 3 (* map size*size *)
 
@@ -21,19 +41,6 @@ let switch arr i j =
   done;
   Format.printf "\n"
 
-
-let a0 = {state = false ; nb_neighbour = 0}
-let a1 = {state = false ; nb_neighbour = 0}
-let a2 = {state = false ; nb_neighbour = 0}
-let b0 = {state = false ; nb_neighbour = 0}
-let b1 = {state = false ; nb_neighbour = 0}
-let b2 = {state = false ; nb_neighbour = 0}
-let c0 = {state = false ; nb_neighbour = 0}
-let c1 = {state = false ; nb_neighbour = 0}
-let c2 = {state = false ; nb_neighbour = 0}
-
-let arr = [| [|a0 ; a1 ; a2|] ; [|b0 ; b1 ; b2|] ; [|c0 ; c1 ; c2|] |]
-
 let display arr = 
   for i = 0 to size - 1 do
     for j = 0 to size - 1 do
@@ -43,3 +50,20 @@ let display arr =
   done;
   Format.printf "\n"
 
+let next_step arr = 
+  for i = 0 to size - 1 do
+    for j = 0 to size - 1 do
+      let c = arr.(i).(j) in
+      if Bool.not c.state && c.nb_neighbour == 3 then switch arr i j;
+      if c.state && (c.nb_neighbour != 2 && c.nb_neighbour != 3) then switch arr i j
+    done
+  done
+
+let () = 
+  switch arr 0 0;
+  switch arr 1 0;
+  switch arr 1 1;
+  display arr;
+  Format.printf "\n";
+  next_step arr;
+  display arr
