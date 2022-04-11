@@ -48,9 +48,7 @@ let set_cell hn i j c =
     if j < !ymin then ymin := j;
     if j > !ymax then ymax := j;
     Hashtbl.replace hn (i, j) c
-  end  
-
-
+  end
 
 let switch ho hn i j = 
   let c = find_cell ho hn i j in
@@ -63,15 +61,17 @@ let switch ho hn i j =
         let d = find_cell ho hn k l in
         let d = {d with nb_neighbour = d.nb_neighbour + if c.state then 1 else -1} in
         set_cell hn k l d
+        (*set_cell hd k l d*)
     done
   done
 
-let next_step ho hn = 
+let next_step ho hn (*hd*)= 
   let update_cell (i, j) c = 
     if (not c.state) && c.nb_neighbour == 3 then switch ho hn i j else
     if c.state && (c.nb_neighbour != 2 && c.nb_neighbour != 3) then switch ho hn i j 
   in
-  Hashtbl.iter update_cell ho 
+
+  Hashtbl.iter update_cell ho (*hd*) 
 
 
 let rec simulate ho n =
