@@ -39,6 +39,8 @@ let new_state ohd hc nhd =
   ) ohd
 
   let to_RLE hc = 
+    let file = "./_life3/life_f.txt" in
+    let p = open_out file in
     let xmin = ref max_int in
     let xmax = ref min_int in
     let ymax = ref min_int in
@@ -49,16 +51,16 @@ let new_state ohd hc nhd =
       if j < !ymin then ymin := j;
       if j > !ymax then ymax := j;   
     ) hc;
-    let hcf = ref "" in
     for i = !xmin to !xmax do
       for j = !ymin to !ymax do
         let c = get_cell hc (i,j) in
-        hcf := !hcf ^ begin if c.state then "o" else "b" end
+        output_char p (if c.state then 'o' else 'b')
       done;
-      hcf := !hcf ^ "$"
+      output_char p '$'
     done;
-    hcf := !hcf ^ "!";
-    !hcf
+    output_char p '!';
+    output_char p '\n';
+    close_out p
 
 let display hc = 
   let xmin = ref max_int in
@@ -82,7 +84,7 @@ let display hc =
 
 let rec simulate ohd hc nhd n =
   display hc;
-  Format.printf "%s\n" (to_RLE hc);
+  to_RLE hc;
   if n <= 0 then ohd else begin
     new_state ohd hc nhd;
     Hashtbl.clear ohd;
@@ -103,4 +105,4 @@ let init =
   init_cell hc hd 1 (-1);
   init_cell hc hd 1 1;
   init_cell hc hd 2 (-1);
-  init_cell hc hd 2 1
+  init_cell hc hd 2 1;
