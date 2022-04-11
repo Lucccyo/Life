@@ -38,7 +38,27 @@ let new_state ohd hc nhd =
       set_cell hc p nnb nst
   ) ohd
 
-
+  let to_RLE hc = 
+    let xmin = ref max_int in
+    let xmax = ref min_int in
+    let ymax = ref min_int in
+    let ymin = ref max_int in
+    Hashtbl.iter (fun (i, j) c ->
+      if i < !xmin then xmin := i;
+      if i > !xmax then xmax := i;
+      if j < !ymin then ymin := j;
+      if j > !ymax then ymax := j;   
+    ) hc;
+    let hcf = ref "" in
+    for i = !xmin to !xmax do
+      for j = !ymin to !ymax do
+        let c = get_cell hc (i,j) in
+        hcf := !hcf ^ begin if c.state then "o" else "b" end
+      done;
+      hcf := !hcf ^ "$"
+    done;
+    hcf := !hcf ^ "!";
+    !hcf
 
 let display hc = 
   let xmin = ref max_int in
@@ -61,7 +81,8 @@ let display hc =
   Format.printf "\n"
 
 let rec simulate ohd hc nhd n =
-  display hc; 
+  display hc;
+  Format.printf "%s\n" (to_RLE hc);
   if n <= 0 then ohd else begin
     new_state ohd hc nhd;
     Hashtbl.clear ohd;
