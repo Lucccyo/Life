@@ -46,5 +46,6 @@ type t = {
 }
 
 val create : coords list -> coords list -> t
+val grow : t -> unit
 val find_cell : cells -> coords -> Cell.t
 val pp : Format.formatter -> t -> unit

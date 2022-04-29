@@ -13,7 +13,7 @@ end
 module Direction = struct
   type t = R | B | L | T
 
-  let cw =  function R -> B | B -> L | L -> T | T -> R
+  let cw = function R -> B | B -> L | L -> T | T -> R
   let ccw = function R -> T | T -> L | L -> B | B -> R
 
   let to_delta = function
@@ -89,15 +89,19 @@ let pp ppf t =
       in
       let color_prefix, color_suffix =
         match cell.state with
-        | Cell.Dead -> "\x1b[41;1m", "\x1b[0m"
-        | Cell.Alive -> "\x1b[42;1m", "\x1b[0m"
+        | Cell.Dead -> ("\x1b[41;1m", "\x1b[0m")
+        | Cell.Alive -> ("\x1b[42;1m", "\x1b[0m")
       in
-      match (ant_opt) with
+      match ant_opt with
       | None -> Format.fprintf ppf " %s.%s" color_prefix color_suffix
-      | Some { dir = Direction.L; _ } -> Format.fprintf ppf " %s<%s" color_prefix color_suffix
-      | Some { dir = Direction.B; _ } -> Format.fprintf ppf " %sv%s" color_prefix color_suffix
-      | Some { dir = Direction.R; _ } -> Format.fprintf ppf " %s>%s" color_prefix color_suffix
-      | Some { dir = Direction.T; _ } -> Format.fprintf ppf " %s^%s" color_prefix color_suffix
+      | Some { dir = Direction.L; _ } ->
+          Format.fprintf ppf " %s<%s" color_prefix color_suffix
+      | Some { dir = Direction.B; _ } ->
+          Format.fprintf ppf " %sv%s" color_prefix color_suffix
+      | Some { dir = Direction.R; _ } ->
+          Format.fprintf ppf " %s>%s" color_prefix color_suffix
+      | Some { dir = Direction.T; _ } ->
+          Format.fprintf ppf " %s^%s" color_prefix color_suffix
     done;
     Format.fprintf ppf "\n"
   done
@@ -107,3 +111,44 @@ let create cl_grid cl_ant =
   let grid = create_grid left width top height cl_grid in
   let ants = create_ants grid cl_ant in
   { left; top; width; height; grid; ants }
+
+let padding_coords t =
+  let left = t.left - 1 in
+  let right = t.left + t.width in
+  let top = t.top - 1 in
+  let bot = t.top + t.height in
+
+  let tl = { x = left; y = top } in
+  let tr = { x = right; y = top } in
+  let br = { x = right; y = bot } in
+  let bl = { x = left; y = bot } in
+
+  let delta_right = { x = 1; y = 0 } in
+  let delta_bot = { x = 0; y = 1 } in
+  let delta_left = { x = -1; y = 0 } in
+  let delta_top = { x = 0; y = -1 } in
+
+  let rec aux xy delta () =
+    let continuation =
+      let next_xy = add_coords xy delta in
+      if next_xy = tr then aux next_xy delta_bot
+      else if next_xy = br then aux next_xy delta_left
+      else if next_xy = bl then aux next_xy delta_top
+      else if next_xy = tl then fun () -> Seq.Nil
+      else aux next_xy delta
+    in
+    Seq.Cons (xy, continuation)
+  in
+  aux tl delta_right
+
+let padding_cells t =
+  padding_coords t
+  |> Seq.map (fun xy -> Cell.create xy Cell.Alive)
+  |> List.of_seq
+
+let grow t =
+  t.grid <- padding_cells t @ t.grid;
+  t.left <- t.left - 1;
+  t.top <- t.top - 1;
+  t.width <- t.width + 2;
+  t.height <- t.height + 2
