@@ -2,7 +2,7 @@ module B = Board
 
 let () =
   let b =
-    Board.(create [ { x = 0; y = 0 }; { x = 6; y = 6 } ] [ { x = 3; y = 3 } ])
+    Board.(create [ { x = 0; y = 0 }; { x = 6; y = 6 } ] [ { x = 3; y = 3 };  { x = 4; y = 3 } ])
   in
   Fmt.epr "Startup board:\n";
   Fmt.epr "%a\n" Board.pp b;
@@ -13,7 +13,9 @@ let () =
   for i = 0 to prog_count - 1 do
     Game.progress b;
     ignore i;
-    Fmt.epr "Step %d: %a\n" i Board.pp b
+    (* if i mod 1_000_000 = 0 then *)
+    Fmt.epr "Step %d: %a\n%!" i Board.pp b
+    (* Fmt.epr "Step %d: %a\n" i Board.pp b *)
   done;
 
   ()

@@ -89,8 +89,8 @@ let pp ppf t =
       in
       let color_prefix, color_suffix =
         match cell.state with
-        | Cell.Dead -> ("\x1b[41;1m", "\x1b[0m")
-        | Cell.Alive -> ("\x1b[42;1m", "\x1b[0m")
+        | Cell.Dead -> ("\x1b[40;97;1m", "\x1b[0m")
+        | Cell.Alive -> ("\x1b[107;30;1m", "\x1b[0m")
       in
       match ant_opt with
       | None -> Format.fprintf ppf " %s.%s" color_prefix color_suffix
