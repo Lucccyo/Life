@@ -30,25 +30,15 @@ let rec find cl coords =
   | [] -> raise Not_found
   | hd :: tl -> if hd.Cell.coords == coords then hd else find tl coords
 
-let rec size_x cl max min =
-  let min = ref min in
-  let max = ref max in
-  match cl with
-  | [] -> !max - !min
-  | hd :: tl ->
-      if hd.x < !min then min := hd.x;
-      if hd.x > !max then max := hd.x;
-      size_x tl !max !min
-
-let rec size_y cl max min =
-  let min = ref min in
-  let max = ref max in
-  match cl with
-  | [] -> !max - !min
-  | hd :: tl ->
-      if hd.y < !min then min := hd.y;
-      if hd.y > !max then max := hd.y;
-      size_y tl !max !min
+let size cell_cl ant_cl =
+  let seq = List.to_seq (cell_cl @ ant_cl) in
+  let seq_x = Seq.map (fun c -> c.x) seq in
+  let seq_y = Seq.map (fun c -> c.y) seq in
+  let min_x = Seq.fold_left min max_int seq_x in
+  let max_x = Seq.fold_left max min_int seq_x in
+  let min_y = Seq.fold_left min max_int seq_y in
+  let max_y = Seq.fold_left max min_int seq_y in
+  (max_x - min_x, max_y - min_y)
 
 let set_board x y cl =
   let cells = ref [] in
@@ -71,8 +61,7 @@ let rec set_ants cells cl ants =
       with Not_found -> set_ants cells tl ants)
 
 let create cl_grid cl_ant =
-  let width = size_x cl_grid max_int min_int in
-  let height = size_y cl_grid max_int min_int in
+  let width, height = size cl_grid cl_ant in
   let grid = set_board width height cl_grid in
   { width; height; grid; ants = set_ants grid cl_ant [] }
 
