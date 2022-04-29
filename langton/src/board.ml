@@ -1,5 +1,7 @@
 type coords = { x : int; y : int }
 
+let add_coords a b = { x = a.x + b.x; y = a.y + b.y }
+
 module Cell = struct
   type life = Alive | Dead
   type t = { coords : coords; mutable state : life }
@@ -8,11 +10,23 @@ module Cell = struct
   let switch c = c.state <- (if c.state = Alive then Dead else Alive)
 end
 
-module Ant = struct
-  type t = { mutable loc : Cell.t }
+module Direction = struct
+  type t = R | B | L | T
 
-  let create initial_cell = { loc = initial_cell }
-  let move t target_cell = t.loc <- target_cell
+  let cw = function R -> B | B -> L | L -> T | T -> R
+  let ccw = function R -> T | B -> L | L -> B | T -> R
+
+  let to_delta = function
+    | R -> { x = 1; y = 0 }
+    | B -> { x = 0; y = 1 }
+    | L -> { x = -1; y = 0 }
+    | T -> { x = 0; y = -1 }
+end
+
+module Ant = struct
+  type t = { mutable loc : Cell.t; mutable dir : Direction.t }
+
+  let create initial_cell = { loc = initial_cell; dir = Direction.T }
 end
 
 type cells = Cell.t list

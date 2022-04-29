@@ -1,5 +1,7 @@
 type coords = { x : int; y : int }
 
+val add_coords : coords -> coords -> coords
+
 module Cell : sig
   type life = Alive | Dead
   type t = { coords : coords; mutable state : life }
@@ -17,11 +19,18 @@ module Cell : sig
   *)
 end
 
+module Direction : sig
+  type t = R | B | L | T
+
+  val cw : t -> t
+  val ccw : t -> t
+  val to_delta : t -> coords
+end
+
 module Ant : sig
-  type t = { mutable loc : Cell.t }
+  type t = { mutable loc : Cell.t; mutable dir : Direction.t }
 
   val create : Cell.t -> t
-  val move : t -> Cell.t -> unit
 end
 
 type cells = Cell.t list
