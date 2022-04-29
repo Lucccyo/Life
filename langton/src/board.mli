@@ -36,3 +36,4 @@ type t = {
 
 val create : coords list -> coords list -> t
 val find : cells -> coords -> Cell.t
+val pp : Format.formatter -> t -> unit

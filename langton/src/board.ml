@@ -60,6 +60,36 @@ let rec set_ants cells cl ants =
         set_ants cells tl (ants @ [ Ant.create c ])
       with Not_found -> set_ants cells tl ants)
 
+let pp ppf t =
+  Format.fprintf ppf "Board: w=%d, h=%d, #grid:%d, #ants:%d\n" t.width t.height
+    (List.length t.grid) (List.length t.ants);
+
+  for i = 0 to t.height do
+    Format.fprintf ppf "%3d|" i;
+    for j = 0 to t.width do
+      let cell : Cell.t =
+        List.find
+          (fun c ->
+            let open Cell in
+            c.coords.x = j && c.coords.y = i)
+          t.grid
+      in
+      let ant_opt : Ant.t option =
+        List.find_opt
+          (fun c ->
+            let open Ant in
+            c.loc.coords.x = j && c.loc.coords.y = i)
+          t.ants
+      in
+      match (cell.state, ant_opt) with
+      | Cell.Alive, None -> Format.fprintf ppf "%%"
+      | Dead, None -> Format.fprintf ppf "."
+      | Alive, Some _ -> Format.fprintf ppf "A"
+      | Dead, Some _ -> Format.fprintf ppf "a"
+    done;
+    Format.fprintf ppf "\n"
+  done
+
 let create cl_grid cl_ant =
   let width, height = size cl_grid cl_ant in
   let grid = set_board width height cl_grid in

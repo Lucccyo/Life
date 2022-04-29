@@ -1,2 +1,4 @@
 (executable
- (name langton))
+ (name langton)
+ (libraries fmt)
+)
