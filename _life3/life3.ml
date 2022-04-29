@@ -38,8 +38,8 @@ let new_state ohd hc nhd =
       set_cell hc p nnb nst
   ) ohd
 
-  let to_RLE hc = 
-    let file = "./_life3/life_f.txt" in
+  let to_RLE hc gen = 
+    let file = Format.sprintf "./test/life_%06d.rle" gen in
     let p = open_out file in
     let xmin = ref max_int in
     let xmax = ref min_int in
@@ -51,15 +51,38 @@ let new_state ohd hc nhd =
       if j < !ymin then ymin := j;
       if j > !ymax then ymax := j;   
     ) hc;
+    let cpt = ref 0 in
+    output_string p ("x = " ^ string_of_int (!xmax - !xmin) ^ ", y = " ^ string_of_int (!ymax - !ymin) ^ ", rule = B3/S23\n");
     for i = !xmin to !xmax do
+      cpt := 0;
       for j = !ymin to !ymax do
         let c = get_cell hc (i,j) in
-        output_char p (if c.state then 'o' else 'b')
+        if c.state then
+          if !cpt >= 0 then incr cpt
+          else begin
+            if !cpt < (-1) then output_string p (string_of_int (- (!cpt)));
+            output_char p 'b';
+            cpt := 1
+          end
+        else if !cpt <= 0 then decr cpt
+        else begin
+          if !cpt > 1 then output_string p (string_of_int (!cpt));
+          output_char p 'o';
+          cpt := -1
+        end
+        (*output_char p (if c.state then 'o' else 'b')*)
       done;
+      if !cpt > 0 then begin
+        if !cpt > 1 then output_string p (string_of_int (!cpt));
+        output_char p 'o';
+      end
+      else begin
+        if !cpt < -1 then output_string p (string_of_int (- (!cpt)));
+        output_char p 'b';
+      end;
       output_char p '$'
     done;
     output_char p '!';
-    output_char p '\n';
     close_out p
 
 let display hc = 
@@ -82,13 +105,13 @@ let display hc =
   done;
   Format.printf "\n"
 
-let rec simulate ohd hc nhd n =
-  display hc;
-  to_RLE hc;
+let rec simulate ohd hc nhd n gen =
+  (*display hc;*)
+  to_RLE hc gen;
   if n <= 0 then ohd else begin
     new_state ohd hc nhd;
     Hashtbl.clear ohd;
-    simulate nhd hc ohd (n-1)
+    simulate nhd hc ohd (n-1) (gen+1)
   end
 
 let init_cell hc hd i j =
@@ -99,10 +122,13 @@ let hc = Hashtbl.create 15
 let hd = Hashtbl.create 15
 
 let init = 
-  init_cell hc hd 0 (-1);
-  init_cell hc hd 0 0;
-  init_cell hc hd 0 1;
-  init_cell hc hd 1 (-1);
-  init_cell hc hd 1 1;
-  init_cell hc hd 2 (-1);
-  init_cell hc hd 2 1;
+  init_cell hc hd 1 0;
+  init_cell hc hd 3 1;
+  init_cell hc hd 0 2;
+  init_cell hc hd 1 2;
+  init_cell hc hd 4 2;
+  init_cell hc hd 5 2;
+  init_cell hc hd 6 2
+
+
+  
