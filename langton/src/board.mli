@@ -5,10 +5,9 @@ module Cell : sig
   type t = { coords : coords; mutable state : life }
 
   val create : coords -> life -> t
-  (*@ c = create x y s
-      ensures x = c.x
-      ensures y = c.y
-      ensures s = c.state
+  (*@ t = create c s
+      ensures c = t.coords
+      ensures s = t.state
   *)
 
   val switch : t -> unit
@@ -32,7 +31,7 @@ type t = {
   mutable width : int;
   mutable height : int;
   mutable grid : cells;
-  mutable ants : ants;
+  ants : ants;
 }
 
 val create : coords list -> coords list -> t

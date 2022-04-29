@@ -22,7 +22,7 @@ type t = {
   mutable width : int;
   mutable height : int;
   mutable grid : cells;
-  mutable ants : ants;
+  ants : ants;
 }
 
 let rec find cl coords =
@@ -75,3 +75,5 @@ let create cl_grid cl_ant =
   let height = size_y cl_grid max_int min_int in
   let grid = set_board width height cl_grid in
   { width; height; grid; ants = set_ants grid cl_ant [] }
+
+(*accepter les fourmis partout*)
