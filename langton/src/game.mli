@@ -1,1 +1,1 @@
-val progress = Board.t -> unit
+val progress : Board.t -> unit
