@@ -19,16 +19,20 @@ type cells = Cell.t list
 type ants = Ant.t list
 
 type t = {
+  mutable left : int;
+  mutable top : int;
   mutable width : int;
   mutable height : int;
   mutable grid : cells;
   ants : ants;
 }
 
-let rec find cl coords =
-  match cl with
-  | [] -> raise Not_found
-  | hd :: tl -> if hd.Cell.coords == coords then hd else find tl coords
+let find_cell grid coord =
+  let rec aux = function
+    | [] -> raise Not_found
+    | hd :: tl -> if hd.Cell.coords = coord then hd else aux tl
+  in
+  aux grid
 
 let size cell_cl ant_cl =
   let seq = List.to_seq (cell_cl @ ant_cl) in
@@ -38,47 +42,35 @@ let size cell_cl ant_cl =
   let max_x = Seq.fold_left max min_int seq_x in
   let min_y = Seq.fold_left min max_int seq_y in
   let max_y = Seq.fold_left max min_int seq_y in
-  (max_x - min_x, max_y - min_y)
+  (min_x, min_y, max_x - min_x + 1, max_y - min_y + 1)
 
-let set_board x y cl =
+let create_grid minx width miny height cl =
   let cells = ref [] in
-  for x = 0 to x do
-    for y = 0 to y do
+  for x = minx to minx + width - 1 do
+    for y = miny to miny + height - 1 do
       let s = if List.mem { x; y } cl then Cell.Alive else Cell.Dead in
       let c = Cell.create { x; y } s in
-      cells := !cells @ [ c ]
+      cells := c :: !cells
     done
   done;
   !cells
 
-let rec set_ants cells cl ants =
-  match cl with
-  | [] -> ants
-  | hd :: tl -> (
-      try
-        let c = find cells hd in
-        set_ants cells tl (ants @ [ Ant.create c ])
-      with Not_found -> set_ants cells tl ants)
+let create_ants cells cl = List.map (fun c -> Ant.create (find_cell cells c)) cl
 
 let pp ppf t =
   Format.fprintf ppf "Board: w=%d, h=%d, #grid:%d, #ants:%d\n" t.width t.height
     (List.length t.grid) (List.length t.ants);
 
-  for i = 0 to t.height do
-    Format.fprintf ppf "%3d|" i;
-    for j = 0 to t.width do
-      let cell : Cell.t =
-        List.find
-          (fun c ->
-            let open Cell in
-            c.coords.x = j && c.coords.y = i)
-          t.grid
-      in
+  for y = t.top to t.top + t.height - 1 do
+    Format.fprintf ppf "%3d|" y;
+    for x = t.left to t.left + t.width - 1 do
+      let cell : Cell.t = find_cell t.grid { x; y } in
+
       let ant_opt : Ant.t option =
         List.find_opt
           (fun c ->
             let open Ant in
-            c.loc.coords.x = j && c.loc.coords.y = i)
+            c.loc.coords.x = x && c.loc.coords.y = y)
           t.ants
       in
       match (cell.state, ant_opt) with
@@ -91,8 +83,7 @@ let pp ppf t =
   done
 
 let create cl_grid cl_ant =
-  let width, height = size cl_grid cl_ant in
-  let grid = set_board width height cl_grid in
-  { width; height; grid; ants = set_ants grid cl_ant [] }
-
-(*accepter les fourmis partout*)
+  let left, top, width, height = size cl_grid cl_ant in
+  let grid = create_grid left width top height cl_grid in
+  let ants = create_ants grid cl_ant in
+  { left; top; width; height; grid; ants }

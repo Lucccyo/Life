@@ -6,13 +6,13 @@ module Cell : sig
 
   val create : coords -> life -> t
   (*@ t = create c s
-      ensures c = t.coords
-      ensures s = t.state
+      ensures t.coords = c
+      ensures t.state = s
   *)
 
   val switch : t -> unit
   (*@ switch t
-      ensures not t.state = old t.state
+      ensures if t.state = Alive then old t.state = Dead else old t.state = Alive
       ensures t.coords = old t.coords
   *)
 end
@@ -28,6 +28,8 @@ type cells = Cell.t list
 type ants = Ant.t list
 
 type t = {
+  mutable left : int;
+  mutable top : int;
   mutable width : int;
   mutable height : int;
   mutable grid : cells;
@@ -35,5 +37,5 @@ type t = {
 }
 
 val create : coords list -> coords list -> t
-val find : cells -> coords -> Cell.t
+val find_cell : cells -> coords -> Cell.t
 val pp : Format.formatter -> t -> unit
