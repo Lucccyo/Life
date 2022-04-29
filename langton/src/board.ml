@@ -13,8 +13,8 @@ end
 module Direction = struct
   type t = R | B | L | T
 
-  let cw = function R -> B | B -> L | L -> T | T -> R
-  let ccw = function R -> T | B -> L | L -> B | T -> R
+  let cw =  function R -> B | B -> L | L -> T | T -> R
+  let ccw = function R -> T | T -> L | L -> B | B -> R
 
   let to_delta = function
     | R -> { x = 1; y = 0 }
@@ -26,7 +26,7 @@ end
 module Ant = struct
   type t = { mutable loc : Cell.t; mutable dir : Direction.t }
 
-  let create initial_cell = { loc = initial_cell; dir = Direction.T }
+  let create initial_cell = { loc = initial_cell; dir = Direction.L }
 end
 
 type cells = Cell.t list
@@ -62,7 +62,7 @@ let create_grid minx width miny height cl =
   let cells = ref [] in
   for x = minx to minx + width - 1 do
     for y = miny to miny + height - 1 do
-      let s = if List.mem { x; y } cl then Cell.Alive else Cell.Dead in
+      let s = if List.mem { x; y } cl then Cell.Dead else Cell.Alive in
       let c = Cell.create { x; y } s in
       cells := c :: !cells
     done
@@ -87,11 +87,17 @@ let pp ppf t =
             c.loc.coords.x = x && c.loc.coords.y = y)
           t.ants
       in
-      match (cell.state, ant_opt) with
-      | Cell.Alive, None -> Format.fprintf ppf "%%"
-      | Dead, None -> Format.fprintf ppf "."
-      | Alive, Some _ -> Format.fprintf ppf "A"
-      | Dead, Some _ -> Format.fprintf ppf "a"
+      let color_prefix, color_suffix =
+        match cell.state with
+        | Cell.Dead -> "\x1b[41;1m", "\x1b[0m"
+        | Cell.Alive -> "\x1b[42;1m", "\x1b[0m"
+      in
+      match (ant_opt) with
+      | None -> Format.fprintf ppf " %s.%s" color_prefix color_suffix
+      | Some { dir = Direction.L; _ } -> Format.fprintf ppf " %s<%s" color_prefix color_suffix
+      | Some { dir = Direction.B; _ } -> Format.fprintf ppf " %sv%s" color_prefix color_suffix
+      | Some { dir = Direction.R; _ } -> Format.fprintf ppf " %s>%s" color_prefix color_suffix
+      | Some { dir = Direction.T; _ } -> Format.fprintf ppf " %s^%s" color_prefix color_suffix
     done;
     Format.fprintf ppf "\n"
   done

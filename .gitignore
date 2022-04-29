@@ -1,32 +1,19 @@
-*.annot
-*.cmo
-*.cma
-*.cmi
-*.a
-*.o
-*.cmx
-*.cmxs
-*.cmxa
-
-# ocamlbuild working directory
 _build/
-
-# ocamlbuild targets
-*.byte
-*.native
-
-# oasis generated files
-setup.data
-setup.log
-
-# Merlin configuring file for Vim and Emacs
-.merlin
-
-# Dune generated files
+_opam
+*~
+\.\#*
+\#*#
 *.install
-
-# Local OPAM switch
-_opam/
-
-# Life3 test files
-test/
+.merlin
+*.bak
+_build
+_coverage
+*~
+*.install
+*.merlin
+_opam
+.envrc
+\#*
+.#*
+.*.swp
+**/.DS_Store
