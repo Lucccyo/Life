@@ -18,20 +18,17 @@ let progress b =
   let should_grow =
     List.exists
       (fun c ->
-           c.x < b.left
+        c.x < b.left
         || c.x >= b.left + b.width
         || c.y < b.top
         || c.y >= b.top + b.height)
       new_coords
   in
-  if should_grow then (
-    Fmt.epr "Let's grow board\n";
-    Board.grow b;
-    Fmt.epr ">>>>>>>>>>>>>>> Grown board:\n";
-    Fmt.epr "%a\n" Board.pp b;
-    Fmt.epr ">>>>>>>>>>>>>>>\n";
-
-  );
+  if should_grow then (*Fmt.epr "Let's grow board\n";*)
+    Board.grow b
+    (*Fmt.epr ">>>>>>>>>>>>>>> Grown board:\n";
+      Fmt.epr "%a\n" Board.pp b;
+      Fmt.epr ">>>>>>>>>>>>>>>\n"*);
 
   (* Step 3. Move and flip *)
   List.iter2

@@ -4,10 +4,13 @@ let add_coords a b = { x = a.x + b.x; y = a.y + b.y }
 
 module Cell = struct
   type life = Alive | Dead
-  type t = { coords : coords; mutable state : life }
+  type t = { coords : coords; mutable state : life; mutable prev_state : life }
 
-  let create coords state = { coords; state }
-  let switch c = c.state <- (if c.state = Alive then Dead else Alive)
+  let create coords state prev_state = { coords; state; prev_state }
+
+  let switch c =
+    c.prev_state <- c.state;
+    c.state <- (if c.state = Alive then Dead else Alive)
 end
 
 module Direction = struct
@@ -62,14 +65,20 @@ let create_grid minx width miny height cl =
   let cells = ref [] in
   for x = minx to minx + width - 1 do
     for y = miny to miny + height - 1 do
-      let s = if List.mem { x; y } cl then Cell.Dead else Cell.Alive in
-      let c = Cell.create { x; y } s in
+      let s = if List.mem { x; y } cl then Cell.Alive else Cell.Dead in
+      let c = Cell.create { x; y } s Dead in
       cells := c :: !cells
     done
   done;
   !cells
 
 let create_ants cells cl = List.map (fun c -> Ant.create (find_cell cells c)) cl
+
+let create cl_grid cl_ant =
+  let left, top, width, height = size cl_grid cl_ant in
+  let grid = create_grid left width top height cl_grid in
+  let ants = create_ants grid cl_ant in
+  { left; top; width; height; grid; ants }
 
 let pp ppf t =
   Format.fprintf ppf "Board: w=%d, h=%d, #grid:%d, #ants:%d\n" t.width t.height
@@ -106,12 +115,6 @@ let pp ppf t =
     Format.fprintf ppf "\n"
   done
 
-let create cl_grid cl_ant =
-  let left, top, width, height = size cl_grid cl_ant in
-  let grid = create_grid left width top height cl_grid in
-  let ants = create_ants grid cl_ant in
-  { left; top; width; height; grid; ants }
-
 let padding_coords t =
   let left = t.left - 1 in
   let right = t.left + t.width in
@@ -143,7 +146,7 @@ let padding_coords t =
 
 let padding_cells t =
   padding_coords t
-  |> Seq.map (fun xy -> Cell.create xy Cell.Alive)
+  |> Seq.map (fun xy -> Cell.create xy Cell.Dead Cell.Alive)
   |> List.of_seq
 
 let grow t =
@@ -152,3 +155,52 @@ let grow t =
   t.top <- t.top - 1;
   t.width <- t.width + 2;
   t.height <- t.height + 2
+
+let to_RLE t gen =
+  let file = Format.sprintf "../langton_test/ant_%06d.rle" gen in
+  let p = open_out file in
+  let xmin = t.left in
+  let ymin = t.top in
+  let ymax = t.top + t.height - 1 in
+  let xmax = t.left + t.width - 1 in
+
+  let cpt = ref 0 in
+  output_string p
+    ("x = "
+    ^ string_of_int (xmax - xmin)
+    ^ ", y = "
+    ^ string_of_int (ymax - ymin)
+    ^ ", rule = Langtons-Ant\n");
+
+  for y = ymin to ymax do
+    cpt := 0;
+    for x = xmin to xmax do
+      let cell : Cell.t = find_cell t.grid { x; y } in
+      let ant_opt : Ant.t option =
+        List.find_opt
+          (fun c ->
+            let open Ant in
+            c.loc.coords.x = x && c.loc.coords.y = y)
+          t.ants
+      in
+      let alive =
+        match cell.state with Cell.Dead -> false | Cell.Alive -> true
+      in
+      let prev_alive =
+        match cell.prev_state with Cell.Dead -> false | Cell.Alive -> true
+      in
+      match ant_opt with
+      | None -> if alive then output_char p 'A' else output_char p '.'
+      | Some { dir = Direction.L; _ } ->
+          output_char p (if prev_alive then 'I' else 'E')
+      | Some { dir = Direction.B; _ } ->
+          output_char p (if prev_alive then 'H' else 'D')
+      | Some { dir = Direction.R; _ } ->
+          output_char p (if prev_alive then 'G' else 'C')
+      | Some { dir = Direction.T; _ } ->
+          output_char p (if prev_alive then 'F' else 'B')
+    done;
+    output_char p '$'
+  done;
+  output_char p '!';
+  close_out p
